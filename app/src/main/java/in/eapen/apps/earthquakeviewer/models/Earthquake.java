@@ -6,7 +6,7 @@ package in.eapen.apps.earthquakeviewer.models;
 
 public class Earthquake {
     public long datetime;
-    public long depth;
+    public float depth;
     public double longitude;
     public double latitude;
     public float magnitude;

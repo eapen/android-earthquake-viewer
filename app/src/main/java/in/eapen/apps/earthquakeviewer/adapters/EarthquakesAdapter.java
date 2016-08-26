@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
@@ -28,7 +27,6 @@ public class EarthquakesAdapter extends ArrayAdapter<Earthquake> {
         TextView magnitude;
         TextView latitude;
         TextView longitude;
-        TextView depth;
         TextView date;
     }
 
@@ -48,12 +46,11 @@ public class EarthquakesAdapter extends ArrayAdapter<Earthquake> {
 
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_earthquake, parent, false);
-            // setup viewholder
+            // setup viewholder which is especially helpful for longer lists
             viewHolder = new ViewHolderItem();
             viewHolder.magnitude = (TextView) convertView.findViewById(R.id.tvMagnitude);
             viewHolder.latitude = (TextView) convertView.findViewById(R.id.tvLatitude);
             viewHolder.longitude = (TextView) convertView.findViewById(R.id.tvLongitude);
-            viewHolder.depth = (TextView) convertView.findViewById(R.id.tvDepth);
             viewHolder.date = (TextView) convertView.findViewById(R.id.tvDate);
 
             // set the holder with the view
@@ -63,12 +60,10 @@ public class EarthquakesAdapter extends ArrayAdapter<Earthquake> {
         }
 
         viewHolder.magnitude.setTypeface(roboto);
-        viewHolder.depth.setTypeface(roboto);
 
         DecimalFormat decimalFormatter = new DecimalFormat("#0.00");
 
         viewHolder.magnitude.setText(decimalFormatter.format(earthquake.magnitude));
-        viewHolder.depth.setText(decimalFormatter.format(earthquake.depth));
         viewHolder.latitude.setText(decimalFormatter.format(earthquake.latitude));
         viewHolder.longitude.setText(decimalFormatter.format(earthquake.longitude));
 
@@ -78,10 +73,9 @@ public class EarthquakesAdapter extends ArrayAdapter<Earthquake> {
             viewHolder.magnitude.setTextColor(Color.BLACK);
         }
 
-        viewHolder.date.setText(DateUtils.getRelativeTimeSpanString(earthquake.datetime * 1000,
-                System.currentTimeMillis(),
-                0,
-                DateUtils.FORMAT_ABBREV_RELATIVE));
+        // if the dates are more than a few days old, it shows the actual date instead
+        // which happens to be the case for most areas I searched for
+        viewHolder.date.setText(DateUtils.getRelativeTimeSpanString(earthquake.datetime));
 
         // TODO:
         // clear out map if recycled right away

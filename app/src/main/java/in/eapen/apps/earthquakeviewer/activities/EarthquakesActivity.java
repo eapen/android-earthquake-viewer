@@ -5,23 +5,38 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.Comparator;
+import java.util.PriorityQueue;
+import java.util.concurrent.ExecutionException;
 
 import in.eapen.apps.earthquakeviewer.R;
 import in.eapen.apps.earthquakeviewer.adapters.EarthquakesAdapter;
 import in.eapen.apps.earthquakeviewer.models.Earthquake;
+import in.eapen.apps.earthquakeviewer.utils.DateHelper;
+import in.eapen.apps.earthquakeviewer.utils.FetchUrlTask;
+import in.eapen.apps.earthquakeviewer.utils.NetworkCheck;
 
 public class EarthquakesActivity extends AppCompatActivity {
 
 
     private ArrayList<Earthquake> earthquakes;
     private EarthquakesAdapter earthquakesAdapter;
-    private static final String API_URL = "http://api.geonames.org/earthquakesJSON?username=mkoppelman";
+    // default bounds  => ((37.174703712988865, -122.81540517968756), (38.045005508057116, -120.89279775781256))east
+    // TODO: remove formatted=true to reduce data transferred, allow modification of lat/long
+    private static final String API_URL = "http://api.geonames.org/earthquakesJSON?username=mkoppelman&north=38.045&south=37.174&west=-122.815&east=-120.893&maxRows=20&formatted=true";
+    private static final String EARTHQUAKE_LIST = "earthquakes";
+
     private SwipeRefreshLayout swipeContainer;
+    NetworkCheck nc = new NetworkCheck(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,44 +51,109 @@ public class EarthquakesActivity extends AppCompatActivity {
         earthquakesAdapter = new EarthquakesAdapter(this, earthquakes);
         ListView lv = (ListView) findViewById(R.id.lvEarthquakes);
         lv.setAdapter(earthquakesAdapter);
-        // fetch popular photos
-        fetchEarthquakes();
+
+        if (!nc.isNetworkAvailable()) {
+            Toast.makeText(this, "Closing application, network unavailable", Toast.LENGTH_LONG).show();
+            this.finish();
+        } else {
+            // fetch popular photos
+            fetchEarthquakes();
+        }
 
         // Lookup the swipe container view
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
-                fetchEarthquakesAsync();
+                if (!nc.isNetworkAvailable()) {
+                    Toast.makeText(getApplicationContext(), "Please check your network connection", Toast.LENGTH_LONG).show();
+                } else {
+                    fetchEarthquakesAsync();
+                }
+                swipeContainer.setRefreshing(false);
             }
         });
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.activity_main, menu);
+        return true;
+    }
+
     private void fetchEarthquakesAsync() {
-        earthquakesAdapter.clear();
+        earthquakes.clear();
         fetchEarthquakes();
-        swipeContainer.setRefreshing(false);
         Toast.makeText(getApplicationContext(), "Refreshed data", Toast.LENGTH_SHORT).show();
     }
 
     private void fetchEarthquakes() {
 
-        Random rand = new Random();
-        for (int i=0; i< 10; i++) {
-            Earthquake earthquake = new Earthquake();
-            earthquake.datetime = (long) i;
-            earthquake.depth = (long) (i * 10);
-            earthquake.magnitude = rand.nextInt(12);
-            earthquake.latitude = rand.nextFloat() * (180) + -90;
-            earthquake.longitude = rand.nextFloat() * (360) + -180;
+        JSONObject jsonResponse = null;
+        try {
+            jsonResponse = new FetchUrlTask().execute(API_URL).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        // Log.d("debug", jsonResponse.toString());
 
-            earthquakes.add(earthquake);
+
+        JSONArray results = null;
+        JSONObject eqObject = null;
+
+
+        // For legibility let's sort by date rather than the default magnitude
+
+        class DateIndexEq {
+            private int index;
+            private float date;
+
+            public DateIndexEq (int index, long date) {
+                this.index = index;
+                this.date = date;
+            }
+        }
+
+        class DepthIndexEqComparator implements Comparator<DateIndexEq> {
+            public int compare(DateIndexEq a, DateIndexEq b) {
+                return (b.date > a.date) ? 1 : -1;
+            }
+        }
+
+        try {
+            results = jsonResponse.getJSONArray(EARTHQUAKE_LIST);
+            DepthIndexEqComparator comparator = new DepthIndexEqComparator();
+            // Let PQ take care of sorting by Date and we can use Index to populate adapter
+            PriorityQueue<DateIndexEq> queue = new PriorityQueue<>(results.length(), comparator);
+            for (int i = 0; i<results.length(); i++) {
+                eqObject = results.getJSONObject(i);
+                queue.add(new DateIndexEq(i, DateHelper.getEpoch(eqObject.getString("datetime"))));
+            }
+
+            DateIndexEq die;  // pun not intended
+
+            while ((die = queue.poll()) != null) {
+                eqObject = results.getJSONObject(die.index);
+                Earthquake earthquake = new Earthquake();
+                earthquake.datetime = DateHelper.getEpoch(eqObject.getString("datetime"));
+                earthquake.depth = (float) eqObject.getDouble("depth");
+                earthquake.magnitude = (float) eqObject.getDouble("magnitude");
+                earthquake.latitude = eqObject.getDouble("lat");
+                earthquake.longitude = eqObject.getDouble("lng");
+                earthquake.source = eqObject.getString("src");
+
+                earthquakes.add(earthquake);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
         Log.d("debug", String.valueOf(earthquakes.size()) + " elements in array");
         earthquakesAdapter.notifyDataSetChanged();
     }
+
+
 }
