@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Earthquake Viewer</string>
+    <string name="app_name">Worst Earthquakes</string>
     <string name="magnitude_header">Magnitude</string>
     <string name="location_header">Location</string>
     <string name="date_header">Date</string>

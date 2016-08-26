@@ -5,7 +5,6 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -32,7 +31,9 @@ public class EarthquakesActivity extends AppCompatActivity {
     private EarthquakesAdapter earthquakesAdapter;
     // default bounds  => ((37.174703712988865, -122.81540517968756), (38.045005508057116, -120.89279775781256))east
     // TODO: remove formatted=true to reduce data transferred, allow modification of lat/long
-    private static final String API_URL = "http://api.geonames.org/earthquakesJSON?username=mkoppelman&north=38.045&south=37.174&west=-122.815&east=-120.893&maxRows=20&formatted=true";
+    // private static final String API_URL = "http://api.geonames.org/earthquakesJSON?username=mkoppelman&north=43.3498&south=41.349837&west=13&east=15";
+    // Top 100 Worst earthquakes on the planet
+    private static final String API_URL = "http://api.geonames.org/earthquakesJSON?username=mkoppelman&north=90&south=-90&west=-180&east=180&maxRows=100";
     private static final String EARTHQUAKE_LIST = "earthquakes";
 
     private SwipeRefreshLayout swipeContainer;
@@ -73,13 +74,6 @@ public class EarthquakesActivity extends AppCompatActivity {
                 swipeContainer.setRefreshing(false);
             }
         });
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.activity_main, menu);
-        return true;
     }
 
     private void fetchEarthquakesAsync() {
@@ -123,34 +117,46 @@ public class EarthquakesActivity extends AppCompatActivity {
             }
         }
 
-        try {
-            results = jsonResponse.getJSONArray(EARTHQUAKE_LIST);
-            DepthIndexEqComparator comparator = new DepthIndexEqComparator();
-            // Let PQ take care of sorting by Date and we can use Index to populate adapter
-            PriorityQueue<DateIndexEq> queue = new PriorityQueue<>(results.length(), comparator);
-            for (int i = 0; i<results.length(); i++) {
-                eqObject = results.getJSONObject(i);
-                queue.add(new DateIndexEq(i, DateHelper.getEpoch(eqObject.getString("datetime"))));
+        if (jsonResponse != null && jsonResponse.has(EARTHQUAKE_LIST)) {
+            try {
+                results = jsonResponse.getJSONArray(EARTHQUAKE_LIST);
+                DepthIndexEqComparator comparator = new DepthIndexEqComparator();
+                // Let PQ take care of sorting by Date and we can use Index to populate adapter
+                PriorityQueue<DateIndexEq> queue = new PriorityQueue<>(results.length(), comparator);
+                for (int i = 0; i < results.length(); i++) {
+                    eqObject = results.getJSONObject(i);
+                    queue.add(new DateIndexEq(i, DateHelper.getEpoch(eqObject.getString("datetime"))));
+                }
+
+                DateIndexEq die;  // pun not intended
+
+                while ((die = queue.poll()) != null) {
+                    eqObject = results.getJSONObject(die.index);
+                    Earthquake earthquake = new Earthquake();
+                    earthquake.datetime = DateHelper.getEpoch(eqObject.getString("datetime"));
+                    earthquake.depth = (float) eqObject.getDouble("depth");
+                    earthquake.magnitude = (float) eqObject.getDouble("magnitude");
+                    earthquake.latitude = eqObject.getDouble("lat");
+                    earthquake.longitude = eqObject.getDouble("lng");
+                    earthquake.source = eqObject.getString("src");
+
+                    earthquakes.add(earthquake);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
 
-            DateIndexEq die;  // pun not intended
-
-            while ((die = queue.poll()) != null) {
-                eqObject = results.getJSONObject(die.index);
-                Earthquake earthquake = new Earthquake();
-                earthquake.datetime = DateHelper.getEpoch(eqObject.getString("datetime"));
-                earthquake.depth = (float) eqObject.getDouble("depth");
-                earthquake.magnitude = (float) eqObject.getDouble("magnitude");
-                earthquake.latitude = eqObject.getDouble("lat");
-                earthquake.longitude = eqObject.getDouble("lng");
-                earthquake.source = eqObject.getString("src");
-
-                earthquakes.add(earthquake);
+        } else {
+            String errorMessage = "Sorry, no data was found. Please try another location.";
+            if (jsonResponse != null && jsonResponse.has("status")) {
+                try {
+                    errorMessage = jsonResponse.getJSONObject("status").getString("message").toString();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
         }
-
         Log.d("debug", String.valueOf(earthquakes.size()) + " elements in array");
         earthquakesAdapter.notifyDataSetChanged();
     }

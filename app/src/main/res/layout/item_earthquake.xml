@@ -23,7 +23,7 @@
 
         <LinearLayout
             android:orientation="vertical"
-            android:layout_width="wrap_content"
+            android:layout_width="90dp"
             android:layout_height="wrap_content">
 
             <LinearLayout
@@ -76,9 +76,7 @@
             android:layout_height="wrap_content"
             android:text="Aug 17, 2015"
             android:id="@+id/tvDate"
-            android:layout_marginRight="5dp"
-            android:layout_marginTop="2dp"
-            android:textAlignment="viewEnd"
+            android:textAlignment="viewStart"
             android:layout_weight="0.63" />
     </LinearLayout>
 </RelativeLayout>

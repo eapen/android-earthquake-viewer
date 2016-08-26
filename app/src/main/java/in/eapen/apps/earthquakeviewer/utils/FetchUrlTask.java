@@ -1,6 +1,7 @@
 package in.eapen.apps.earthquakeviewer.utils;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,6 +43,7 @@ public class FetchUrlTask extends AsyncTask<String, Void, JSONObject> {
         }
 
         try {
+            Log.d("debug", "Response: " + result.toString());
             jsonResponse = new JSONObject(result.toString());
         } catch (JSONException e) {
             e.printStackTrace();
