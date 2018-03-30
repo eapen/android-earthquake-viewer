@@ -7,7 +7,7 @@
     android:paddingLeft="0dp"
     android:paddingRight="0dp"
     android:paddingTop="0dp"
-    tools:context=".activities.EarthquakesActivity">
+    tools:context=".view.EarthquakesActivity">
 
 
     <LinearLayout
@@ -19,6 +19,7 @@
         android:layout_alignParentStart="true"
         android:padding="2dp"
         android:background="#525252">
+
 
         <TextView
             android:layout_width="86dp"
@@ -45,7 +46,8 @@
             android:textAlignment="viewStart"
             android:layout_weight="0.63"
             android:textColor="#b7b6b6"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:gravity="start" />
     </LinearLayout>
 
     <android.support.v4.widget.SwipeRefreshLayout
@@ -64,4 +66,6 @@
             android:layout_alignParentStart="true"/>
 
     </android.support.v4.widget.SwipeRefreshLayout>
+
+
 </RelativeLayout>

@@ -14,15 +14,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-/**
- * Created by geapen on 8/25/16.
- */
 public class FetchUrlTask extends AsyncTask<String, Void, JSONObject> {
 
-    private static JSONObject jsonResponse;
 
     @Override
     protected JSONObject doInBackground(String... urls) {
+        JSONObject jsonResponse = new JSONObject();
         StringBuilder result = new StringBuilder();
         try {
             URL urlObj = new URL(urls[0]);

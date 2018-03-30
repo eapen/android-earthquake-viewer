@@ -4,9 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-/**
- * Created by geapen on 8/25/16.
- */
+
 public class NetworkCheck {
 
     Context ctx;

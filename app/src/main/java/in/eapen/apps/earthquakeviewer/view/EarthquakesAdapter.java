@@ -1,4 +1,4 @@
-package in.eapen.apps.earthquakeviewer.adapters;
+package in.eapen.apps.earthquakeviewer.view;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -14,7 +14,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import in.eapen.apps.earthquakeviewer.R;
-import in.eapen.apps.earthquakeviewer.models.Earthquake;
+import in.eapen.apps.earthquakeviewer.model.Earthquake;
 
 /**
  * Created by geapen on 8/24/16.
@@ -76,10 +76,6 @@ public class EarthquakesAdapter extends ArrayAdapter<Earthquake> {
         // if the dates are more than a few days old, it shows the actual date instead
         // which happens to be the case for most areas I searched for
         viewHolder.date.setText(DateUtils.getRelativeTimeSpanString(earthquake.datetime));
-
-        // TODO:
-        // clear out map if recycled right away
-        // viewHolder.map.setImageResource(0);
 
         return convertView;
     }

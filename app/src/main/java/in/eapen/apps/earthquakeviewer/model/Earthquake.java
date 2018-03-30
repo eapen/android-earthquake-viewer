@@ -1,8 +1,5 @@
-package in.eapen.apps.earthquakeviewer.models;
+package in.eapen.apps.earthquakeviewer.model;
 
-/**
- * Created by geapen on 8/24/16.
- */
 
 public class Earthquake {
     public long datetime;

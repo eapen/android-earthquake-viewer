@@ -77,6 +77,7 @@
             android:text="Aug 17, 2015"
             android:id="@+id/tvDate"
             android:textAlignment="viewStart"
-            android:layout_weight="0.63" />
+            android:layout_weight="0.63"
+          android:layout_gravity="start" />
     </LinearLayout>
 </RelativeLayout>
